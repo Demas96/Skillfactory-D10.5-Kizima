@@ -1,0 +1,27 @@
+{% extends 'flatpages/default.html' %}
+{% load custom_filters %}
+
+{% block title %}
+Post
+{% endblock title %}
+
+{% block content %}
+<h1>{{ post.header|censor }}</h1>
+{% for cat in post.category.all %}
+    <h5>Категория: {{ cat.category }}</h5>
+{% endfor %}
+
+<hr>
+<h3>{{ post.text|censor }} </h3>
+<p></p>
+<h4 style="text-align: right;">{{ post.time_create|date:'d-m-Y H:i' }} </h4>
+<p></p>
+
+<body>
+  <form action="{% url 'post_update' post.id %}">
+   <button>Редактировать</button></form>
+  <form action="{% url 'post_delete' post.id %}">
+   <button>Удалить</button>
+  </form>
+ </body>
+{% endblock content %}
