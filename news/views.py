@@ -1,4 +1,3 @@
-from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect
 from django.views.generic import ListView, DetailView, UpdateView, CreateView, DeleteView, TemplateView
 from .models import Post, Category, Author
@@ -7,8 +6,18 @@ from .filters import PostFilter
 from .forms import PostForm, SubForm
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from .signals import check_post_today
-from .tasks import send_mail_cel, week_send_mail_cel
-from django.http import HttpResponse
+from .tasks import send_mail_cel
+from django.core.cache import cache
+import logging
+
+
+l1 = logging.getLogger('django')
+l2 = logging.getLogger('django.security')
+l3 = logging.getLogger('django.request')
+l4 = logging.getLogger('django.server')
+l5 = logging.getLogger('django.template')
+l6 = logging.getLogger('django.db_backends')
+
 
 
 class Search(ListView):
@@ -33,6 +42,10 @@ class PostList(ListView):
     paginate_by = 10
 
 
+
+
+
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['time_now'] = datetime.utcnow()
@@ -42,6 +55,23 @@ class PostList(ListView):
 class PostDetailView(DetailView):
     template_name = 'post_detail.html'
     queryset = Post.objects.all()
+
+    def get_object(self, *args, **kwargs):  # переопределяем метод получения объекта, как ни странно
+        l1.error('test1')
+        l2.error('test2')
+        l3.error('test3')
+        l4.error('test4')
+        l5.error('test5')
+        l6.error('test6')
+        obj = cache.get(f'post-{self.kwargs["pk"]}', None)
+        # если объекта нет в кэше, то получаем его и записываем в кэш
+        if not obj:
+            obj = super().get_object(queryset=self.queryset)
+            cache.set(f'post-{self.kwargs["pk"]}', obj)
+
+        return obj
+
+
 
 
 class PostCreateView(PermissionRequiredMixin, CreateView):
